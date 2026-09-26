@@ -1,47 +1,45 @@
+import '../scan/data/models/one_health_assessment.dart';
+import 'fhir_bundle_builder.dart';
+
+export 'fhir_bundle_builder.dart';
+
+/// Legacy bridge function for backward compatibility.
 Map<String, dynamic> generateObservation({
   double? peakHz,
   required bool confirmed,
   required String bank,
 }) {
-  return {
-    'resourceType': 'Observation',
-    'id': 'echostream-obs-simulated',
-    'status': 'final',
-    'code': {
-      'coding': [
-        {
-          'system': 'http://loinc.org',
-          'code': '96608-5',
-          'display': 'Environmental health and risk assessment panel',
-        },
-      ],
-      'text': 'EchoStream One Health Assessment',
-    },
-    'effectiveDateTime': DateTime.now().toIso8601String(),
-    'component': [
-      {
-        'code': {'text': 'Bioacoustic Mosquito Vector Probability'},
-        'valueQuantity': {
-          'value': peakHz != null
-              ? (peakHz >= 450 && peakHz <= 650 ? 0.84 : 0.12)
-              : 0.0,
-          'unit': 'probability',
-        },
-      },
-      {
-        'code': {'text': 'Citizen Validation Status'},
-        'valueString': confirmed
-            ? 'Confirmed - Standing Water Observed'
-            : 'Not Confirmed',
-      },
-      {
-        'code': {'text': 'Acoustic Fundamental Frequency Peak'},
-        'valueQuantity': {'value': peakHz},
-      },
-      {
-        'code': {'text': 'Bank Condition'},
-        'valueString': bank,
-      },
-    ],
-  };
+  final now = DateTime.now();
+  final dummy = OneHealthAssessment(
+    id: 'echostream-obs-${now.millisecondsSinceEpoch}',
+    timestamp: now,
+    locationSector: 'Urban Stream Sector Alpha - Coimbra Corridor',
+    latitude: 40.2056,
+    longitude: -8.4195,
+    temperatureCelsius: 24.5,
+    relativeHumidityPercent: 78.0,
+    ecosystemIntegrityScore: 42.0,
+    ecosystemSummary: 'Moderate Eutrophication (Stagnant flow)',
+    vectorRisk: (peakHz != null && peakHz >= 450 && peakHz <= 650)
+        ? VectorRiskLevel.critical
+        : VectorRiskLevel.low,
+    vectorOutbreakProbability:
+        (peakHz != null && peakHz >= 450 && peakHz <= 650) ? 0.84 : 0.12,
+    vectorSummary: 'Bioacoustic Mosquito Vector Assessment',
+    humanWellbeingRisk: (peakHz != null && peakHz >= 450 && peakHz <= 650)
+        ? HumanWellbeingRiskLevel.severe
+        : HumanWellbeingRiskLevel.minimal,
+    municipalActionRecommendation:
+        'Schedule municipal biocontrol and Bti application.',
+    plainLanguageExplanation:
+        'Acoustic spike identified matching Culicidae wingbeat harmonic profiles.',
+    peakFrequencyHz: peakHz ?? 0.0,
+    mosquitoHarmonicDetected:
+        peakHz != null && peakHz >= 450 && peakHz <= 650,
+    yamnetInsectConfidence: 0.82,
+    citizenConfirmedStandingWater: confirmed,
+    bankCondition: bank,
+    isMarkedFalsePositive: false,
+  );
+  return FhirBundleBuilder.buildObservation(dummy);
 }
