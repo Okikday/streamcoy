@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/scan_pod.dart';
+import '../../data/models/spectral_analysis_result.dart';
+import '../../data/models/yamnet_result.dart';
 import '../widgets/spectrogram_widget.dart';
 import '../widgets/hitl_triage_widget.dart';
+import '../../../../core/ui/spacing.dart';
+import '../../../../core/ui/section_header.dart';
 
 class HitlScreen extends ConsumerWidget {
   final VoidCallback onProceedToOneHealth;
@@ -31,18 +35,18 @@ class HitlScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Explainable AI & HITL Review',
+              'AI Review & Verification',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             Text(
-              'Track 3: Explainable Bioacoustics Sentinel',
+              'Explainable Bioacoustics • Track 3',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 9.5,
+                color: Colors.white.withValues(alpha: 0.65),
+                fontSize: 11,
               ),
             ),
           ],
@@ -50,11 +54,18 @@ class HitlScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: AppSpacing.screenInsets,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Spectrogram Heatmap Card with Bounding Box
+              // ── AI ANALYSIS RESULTS ──
+              const SectionHeader(
+                title: 'AI ANALYSIS',
+                subtitle: 'Dual-engine bioacoustic inference',
+                icon: Icons.auto_graph_rounded,
+              ),
+
+              // 1. Spectrogram Heatmap Card
               SpectrogramWidget(
                 frames: state.spectrogramFrames,
                 isVectorDetected: isDetected,
@@ -63,70 +74,93 @@ class HitlScreen extends ConsumerWidget {
                     : 542.0,
                 height: 200,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.cardGap),
 
-              // 2. AI Diagnostic Note (Plain-Language Evidence Rationale)
-              _buildAiDiagnosticRationaleCard(
+              // 2. AI Diagnostic Rationale (plain-language)
+              _AiDiagnosticCard(
                 isDetected: isDetected,
                 peakHz: spectral.peakFrequencyHz,
                 prominence: spectral.peakProminence,
                 yamnetInsectProb: yamnet.insectProbability,
-                yamnetMosquitoProb: yamnet.mosquitoProbability,
                 bi: spectral.bioacousticIndex,
                 isOverride: state.hitlData.isFalsePositiveOverride,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.cardGap),
 
-              // 3. Dual-Engine Diagnostic Breakdown (YAMNet + Pure Dart FFT)
-              _buildDualEngineBreakdown(spectral, yamnet),
-              const SizedBox(height: 14),
+              // 3. Key Metrics Summary (always visible) + Collapsible Detail
+              _CollapsibleDualEngineBreakdown(
+                spectral: spectral,
+                yamnet: yamnet,
+              ),
+              const SizedBox(height: AppSpacing.sectionGap),
 
-              // 4. Citizen Verification Card (HITL Form)
+              // ── FIELD VERIFICATION ──
+              const SectionHeader(
+                title: 'YOUR VERIFICATION',
+                subtitle: 'Citizen science confirmation (HITL)',
+                icon: Icons.verified_user_rounded,
+              ),
+
+              // 4. HITL Triage Form
               HitlTriageWidget(
                 hitlData: state.hitlData,
                 onChanged: (updated) => pod.updateHitlValidation(updated),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: AppSpacing.cardGap),
 
-              // 5. Action Button to proceed to One Health Card
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00E5FF),
-                  foregroundColor: const Color(0xFF050B14),
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+              // 5. Action Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00E5FF),
+                    foregroundColor: const Color(0xFF050B14),
+                    minimumSize: const Size.fromHeight(52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                  onPressed: () {
+                    pod.updateHitlValidation(state.hitlData);
+                    onProceedToOneHealth();
+                  },
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                  label: const Text('Generate One Health Report'),
                 ),
-                onPressed: () {
-                  // Ensure assessment is computed
-                  pod.updateHitlValidation(state.hitlData);
-                  onProceedToOneHealth();
-                },
-                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                label: const Text('Validate & Generate One Health Card'),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.cardGap),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildAiDiagnosticRationaleCard({
-    required bool isDetected,
-    required double peakHz,
-    required double prominence,
-    required double yamnetInsectProb,
-    required double yamnetMosquitoProb,
-    required double bi,
-    required bool isOverride,
-  }) {
+/// Plain-language AI diagnostic explanation card.
+class _AiDiagnosticCard extends StatelessWidget {
+  final bool isDetected;
+  final double peakHz;
+  final double prominence;
+  final double yamnetInsectProb;
+  final double bi;
+  final bool isOverride;
+
+  const _AiDiagnosticCard({
+    required this.isDetected,
+    required this.peakHz,
+    required this.prominence,
+    required this.yamnetInsectProb,
+    required this.bi,
+    required this.isOverride,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     Color cardColor;
     Color borderColor;
     IconData icon;
@@ -139,25 +173,25 @@ class HitlScreen extends ConsumerWidget {
       icon = Icons.cancel_outlined;
       title = 'Citizen Override Applied';
       message =
-          'Acoustic resonance at ${peakHz.toStringAsFixed(1)} Hz flagged by citizen scientist as ambient mechanical equipment. Vector classification suppressed.';
+          'Acoustic resonance at ${peakHz.toStringAsFixed(1)} Hz flagged as ambient mechanical equipment. Vector classification suppressed.';
     } else if (isDetected) {
       cardColor = const Color(0xFFFF5252).withValues(alpha: 0.12);
       borderColor = const Color(0xFFFF5252);
       icon = Icons.warning_amber_rounded;
       title = 'Culicidae Wingbeat Spike Identified';
       message =
-          'Persistent narrow-band energy spike detected at ${peakHz.toStringAsFixed(1)} Hz (${prominence.toStringAsFixed(1)}x above noise floor). Matches Culex / Aedes flight harmonics. YAMNet insect confidence: ${(yamnetInsectProb * 100).toInt()}%.';
+          'Energy spike at ${peakHz.toStringAsFixed(1)} Hz (${prominence.toStringAsFixed(1)}x above noise floor). Matches Culex/Aedes flight harmonics. YAMNet insect confidence: ${(yamnetInsectProb * 100).toInt()}%.';
     } else {
       cardColor = const Color(0xFF00E676).withValues(alpha: 0.12);
       borderColor = const Color(0xFF00E676);
       icon = Icons.verified_rounded;
-      title = 'Healthy Riparian Biophony Detected';
+      title = 'Healthy Riparian Biophony';
       message =
-          'No vector harmonic wingbeat spikes detected in the 450 - 650 Hz band. Stream exhibits positive Bioacoustic Index (BI = ${bi.toStringAsFixed(2)}) with active biophonic aeration.';
+          'No vector wingbeat spikes in the 450–650 Hz band. Bioacoustic Index: ${bi.toStringAsFixed(2)} — active biophonic aeration.';
     }
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.innerCardPadding),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(14),
@@ -176,7 +210,7 @@ class HitlScreen extends ConsumerWidget {
                   title,
                   style: TextStyle(
                     color: borderColor,
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -185,8 +219,8 @@ class HitlScreen extends ConsumerWidget {
                   message,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 11.5,
-                    height: 1.35,
+                    fontSize: 13,
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -196,98 +230,152 @@ class HitlScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildDualEngineBreakdown(
-    dynamic spectral,
-    dynamic yamnet,
-  ) {
+/// Key stat pills always visible, detailed probability bars collapsed by default.
+class _CollapsibleDualEngineBreakdown extends StatelessWidget {
+  final SpectralAnalysisResult spectral;
+  final YamnetResult yamnet;
+
+  const _CollapsibleDualEngineBreakdown({
+    required this.spectral,
+    required this.yamnet,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1E36),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
-                'Dual-Engine Bioacoustic Inference',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+          // Always-visible summary: key metrics
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.innerCardPadding),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Dual-Engine Inference',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color:
+                            const Color(0xFF00E5FF).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        'FFT + MobileNet',
+                        style: TextStyle(
+                          color: Color(0xFF00E5FF),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                'Offline MobileNet + FFT',
+                const SizedBox(height: 14),
+                // Key stat pills — always visible
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatPill(
+                      'Peak Freq',
+                      '${spectral.peakFrequencyHz.toStringAsFixed(1)} Hz',
+                      spectral.isVectorBandPeak
+                          ? const Color(0xFFFF5252)
+                          : const Color(0xFF00E5FF),
+                    ),
+                    _buildStatPill(
+                      'Prominence',
+                      '${spectral.peakProminence.toStringAsFixed(1)}x',
+                      const Color(0xFFFFD54F),
+                    ),
+                    _buildStatPill(
+                      'BI Score',
+                      spectral.bioacousticIndex.toStringAsFixed(2),
+                      const Color(0xFF00E676),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Expandable detail — probability bars
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.innerCardPadding),
+              title: Text(
+                'View Detailed Breakdown',
                 style: TextStyle(
-                  color: Color(0xFF00E5FF),
-                  fontSize: 10,
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // YAMNet Sound Classes
-          _buildProbBar(
-            'Insect Biophony (ID: 125)',
-            yamnet.insectProbability,
-            const Color(0xFF00E5FF),
-          ),
-          const SizedBox(height: 8),
-          _buildProbBar(
-            'Culicidae / Mosquito (ID: 130)',
-            yamnet.mosquitoProbability,
-            const Color(0xFFFF5252),
-          ),
-          const SizedBox(height: 8),
-          _buildProbBar(
-            'Amphibian / Frog Chorus (ID: 136)',
-            yamnet.amphibianFrogProbability,
-            const Color(0xFF00E676),
-          ),
-          const SizedBox(height: 8),
-          _buildProbBar(
-            'Running Water Aeration (ID: 290)',
-            yamnet.flowingWaterProbability,
-            const Color(0xFF00B0FF),
-          ),
-          const SizedBox(height: 8),
-          _buildProbBar(
-            'Anthropic Rumble (ID: 300)',
-            yamnet.anthropicVehicleProbability,
-            const Color(0xFFFF9100),
-          ),
-          const Divider(color: Colors.white10, height: 20),
-
-          // Deterministic FFT metrics
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatPill(
-                'Peak Frequency',
-                '${spectral.peakFrequencyHz.toStringAsFixed(1)} Hz',
-                spectral.isVectorBandPeak
-                    ? const Color(0xFFFF5252)
-                    : const Color(0xFF00E5FF),
-              ),
-              _buildStatPill(
-                'Prominence Q',
-                '${spectral.peakProminence.toStringAsFixed(1)}x',
-                const Color(0xFFFFD54F),
-              ),
-              _buildStatPill(
-                'Bioacoustic Index',
-                spectral.bioacousticIndex.toStringAsFixed(2),
-                const Color(0xFF00E676),
-              ),
-            ],
+              iconColor: Colors.white38,
+              collapsedIconColor: Colors.white38,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.innerCardPadding,
+                      0,
+                      AppSpacing.innerCardPadding,
+                      AppSpacing.innerCardPadding),
+                  child: Column(
+                    children: [
+                      const Divider(color: Colors.white10, height: 1),
+                      const SizedBox(height: 14),
+                      _buildProbBar(
+                        'Insect Biophony (ID: 125)',
+                        yamnet.insectProbability,
+                        const Color(0xFF00E5FF),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildProbBar(
+                        'Culicidae / Mosquito (ID: 130)',
+                        yamnet.mosquitoProbability,
+                        const Color(0xFFFF5252),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildProbBar(
+                        'Amphibian / Frog (ID: 136)',
+                        yamnet.amphibianFrogProbability,
+                        const Color(0xFF00E676),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildProbBar(
+                        'Running Water (ID: 290)',
+                        yamnet.flowingWaterProbability,
+                        const Color(0xFF00B0FF),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildProbBar(
+                        'Anthropic Rumble (ID: 300)',
+                        yamnet.anthropicVehicleProbability,
+                        const Color(0xFFFF9100),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -302,29 +390,33 @@ class HitlScreen extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 11,
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 12,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               '$percent%',
               style: TextStyle(
                 color: color,
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 5),
         ClipRRect(
           borderRadius: BorderRadius.circular(3),
           child: LinearProgressIndicator(
             value: prob.clamp(0.0, 1.0),
-            minHeight: 4,
+            minHeight: 5,
             backgroundColor: Colors.white.withValues(alpha: 0.08),
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
@@ -340,17 +432,17 @@ class HitlScreen extends ConsumerWidget {
           value,
           style: TextStyle(
             color: color,
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: FontWeight.bold,
             fontFamily: 'monospace',
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Text(
           title,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
-            fontSize: 9.5,
+            color: Colors.white.withValues(alpha: 0.55),
+            fontSize: 11,
           ),
         ),
       ],

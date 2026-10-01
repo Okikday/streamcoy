@@ -45,18 +45,18 @@ class HitlTriageWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Citizen Field Validation (HITL)',
+                      'Citizen Field Validation',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      'Mandatory human confirmation (Track 3 Explainable AI standard)',
+                      'Human-in-the-Loop confirmation (Track 3)',
                       style: TextStyle(
                         color: Colors.white54,
-                        fontSize: 10,
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -71,12 +71,14 @@ class HitlTriageWidget extends StatelessWidget {
             '1. Did you observe standing water or insect swarms?',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _buildChoiceChip(
                 label: 'Yes (Standing)',
@@ -90,7 +92,6 @@ class HitlTriageWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
               _buildChoiceChip(
                 label: 'No (Flowing)',
                 icon: Icons.waves_rounded,
@@ -103,7 +104,6 @@ class HitlTriageWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
               _buildChoiceChip(
                 label: 'Unclear',
                 icon: Icons.help_outline_rounded,
@@ -122,58 +122,55 @@ class HitlTriageWidget extends StatelessWidget {
 
           // Question 2: Stream Bank Morphology
           const Text(
-            '2. Stream Bank Morphology (Sighted via device incline):',
+            '2. Stream Bank Morphology:',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildChoiceChip(
-                  label: BankMorphology.naturalVegetated.label,
-                  icon: Icons.grass_rounded,
-                  selected: hitlData.bankMorphology ==
-                      BankMorphology.naturalVegetated,
-                  color: const Color(0xFF00E676),
-                  onTap: () => onChanged(
-                    hitlData.copyWith(
-                      bankMorphology: BankMorphology.naturalVegetated,
-                    ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildChoiceChip(
+                label: BankMorphology.naturalVegetated.label,
+                icon: Icons.grass_rounded,
+                selected: hitlData.bankMorphology ==
+                    BankMorphology.naturalVegetated,
+                color: const Color(0xFF00E676),
+                onTap: () => onChanged(
+                  hitlData.copyWith(
+                    bankMorphology: BankMorphology.naturalVegetated,
                   ),
                 ),
-                const SizedBox(width: 8),
-                _buildChoiceChip(
-                  label: BankMorphology.moderateSlope.label,
-                  icon: Icons.landscape_rounded,
-                  selected: hitlData.bankMorphology ==
-                      BankMorphology.moderateSlope,
-                  color: const Color(0xFFFFB300),
-                  onTap: () => onChanged(
-                    hitlData.copyWith(
-                      bankMorphology: BankMorphology.moderateSlope,
-                    ),
+              ),
+              _buildChoiceChip(
+                label: BankMorphology.moderateSlope.label,
+                icon: Icons.landscape_rounded,
+                selected: hitlData.bankMorphology ==
+                    BankMorphology.moderateSlope,
+                color: const Color(0xFFFFB300),
+                onTap: () => onChanged(
+                  hitlData.copyWith(
+                    bankMorphology: BankMorphology.moderateSlope,
                   ),
                 ),
-                const SizedBox(width: 8),
-                _buildChoiceChip(
-                  label: BankMorphology.steepArtificial.label,
-                  icon: Icons.foundation_rounded,
-                  selected: hitlData.bankMorphology ==
-                      BankMorphology.steepArtificial,
-                  color: const Color(0xFFFF5252),
-                  onTap: () => onChanged(
-                    hitlData.copyWith(
-                      bankMorphology: BankMorphology.steepArtificial,
-                    ),
+              ),
+              _buildChoiceChip(
+                label: BankMorphology.steepArtificial.label,
+                icon: Icons.foundation_rounded,
+                selected: hitlData.bankMorphology ==
+                    BankMorphology.steepArtificial,
+                color: const Color(0xFFFF5252),
+                onTap: () => onChanged(
+                  hitlData.copyWith(
+                    bankMorphology: BankMorphology.steepArtificial,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
 

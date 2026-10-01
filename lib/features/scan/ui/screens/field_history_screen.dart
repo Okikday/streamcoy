@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/scan_pod.dart';
 import '../../data/models/one_health_assessment.dart';
 import '../widgets/fhir_json_viewer.dart';
+import '../../../../core/ui/spacing.dart';
 
 class FieldHistoryScreen extends ConsumerWidget {
   const FieldHistoryScreen({super.key});
@@ -21,18 +22,18 @@ class FieldHistoryScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Riparian Audit Log',
+              'Scan History',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             Text(
-              'Synchronized Municipal Sentinel Stream Records',
+              '${history.length} sentinel records',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 9.5,
+                color: Colors.white.withValues(alpha: 0.65),
+                fontSize: 11,
               ),
             ),
           ],
@@ -44,27 +45,47 @@ class FieldHistoryScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.history_rounded,
-                      size: 48, color: Colors.white.withValues(alpha: 0.3)),
-                  const SizedBox(height: 12),
+                      size: 56, color: Colors.white.withValues(alpha: 0.2)),
+                  const SizedBox(height: 16),
                   const Text(
                     'No Stored Observations',
-                    style: TextStyle(color: Colors.white70, fontSize: 15),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Completed scans will appear here.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: AppSpacing.screenInsets,
               itemCount: history.length,
               itemBuilder: (context, index) {
                 final item = history[index];
-                return _buildHistoryItemCard(context, item);
+                return _HistoryItemCard(item: item);
               },
             ),
     );
   }
+}
 
-  Widget _buildHistoryItemCard(BuildContext context, OneHealthAssessment item) {
+/// Collapsible history card — shows key info at a glance, detail on tap.
+class _HistoryItemCard extends StatelessWidget {
+  final OneHealthAssessment item;
+
+  const _HistoryItemCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
     final isCritical = item.vectorRisk == VectorRiskLevel.critical;
     final riskColor = isCritical
         ? const Color(0xFFFF5252)
@@ -73,8 +94,7 @@ class FieldHistoryScreen extends ConsumerWidget {
             : const Color(0xFF00E676));
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1E36),
         borderRadius: BorderRadius.circular(16),
@@ -84,36 +104,42 @@ class FieldHistoryScreen extends ConsumerWidget {
               : Colors.white.withValues(alpha: 0.08),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          childrenPadding:
+              const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          // Summary: always visible
+          leading: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: riskColor,
+            ),
+          ),
+          title: Text(
+            item.locationSector,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          subtitle: Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: riskColor,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    item.id,
-                    style: const TextStyle(
-                      color: Color(0xFF00E5FF),
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                ],
+              Text(
+                '${item.timestamp.day}/${item.timestamp.month}/${item.timestamp.year}',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 12,
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
                   color: riskColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
@@ -123,64 +149,96 @@ class FieldHistoryScreen extends ConsumerWidget {
                   item.vectorRiskLabel,
                   style: TextStyle(
                     color: riskColor,
-                    fontSize: 9.5,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          iconColor: Colors.white38,
+          collapsedIconColor: Colors.white38,
+          // Detail: shown on tap
+          children: [
+            const Divider(color: Colors.white10, height: 1),
+            const SizedBox(height: 12),
+            // Metric pills
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildMetricPill('Peak',
+                    '${item.peakFrequencyHz.toStringAsFixed(1)} Hz'),
+                _buildMetricPill('Eco Score',
+                    '${item.ecosystemIntegrityScore.toStringAsFixed(1)}/100'),
+                _buildMetricPill(
+                    'ID', item.id),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              item.plainLanguageExplanation,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.75),
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'FHIR LOINC 96608-5',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4),
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: const Color(0xFF00E5FF),
+                  ),
+                  onPressed: () => FhirJsonViewer.show(context, item),
+                  icon: const Icon(Icons.code_rounded, size: 14),
+                  label: const Text('View FHIR',
+                      style: TextStyle(fontSize: 12)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetricPill(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Text(
-            item.locationSector,
+            '$label: ',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 11,
+            ),
+          ),
+          Text(
+            value,
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
+              color: Color(0xFF00E5FF),
+              fontSize: 11,
               fontWeight: FontWeight.bold,
+              fontFamily: 'monospace',
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${item.timestamp.day}/${item.timestamp.month}/${item.timestamp.year} • Peak: ${item.peakFrequencyHz.toStringAsFixed(1)} Hz • Eco Score: ${item.ecosystemIntegrityScore.toStringAsFixed(1)}/100',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 11,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            item.plainLanguageExplanation,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.75),
-              fontSize: 11,
-              height: 1.3,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const Divider(color: Colors.white10, height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'FHIR LOINC 96608-5',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  fontSize: 10,
-                  fontFamily: 'monospace',
-                ),
-              ),
-              TextButton.icon(
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  foregroundColor: const Color(0xFF00E5FF),
-                ),
-                onPressed: () => FhirJsonViewer.show(context, item),
-                icon: const Icon(Icons.code_rounded, size: 14),
-                label: const Text('Inspect FHIR JSON',
-                    style: TextStyle(fontSize: 11)),
-              ),
-            ],
           ),
         ],
       ),

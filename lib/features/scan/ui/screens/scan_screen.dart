@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/scan_pod.dart';
+import '../../providers/scan_state.dart';
 import '../widgets/waveform_visualizer.dart';
 import '../widgets/tilt_gauge_widget.dart';
 import '../widgets/scenario_selector_sheet.dart';
+import '../../../../core/ui/spacing.dart';
+import '../../../../core/ui/section_header.dart';
 
 class ScanScreen extends ConsumerWidget {
   final VoidCallback onProceedToAnalysis;
@@ -45,7 +48,7 @@ class ScanScreen extends ConsumerWidget {
                   'EchoStream Sentinel',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.4,
                   ),
@@ -53,8 +56,8 @@ class ScanScreen extends ConsumerWidget {
                 Text(
                   'IEEE OneAquaHealth • On-Device Bioacoustics',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: 9.5,
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 11,
                   ),
                 ),
               ],
@@ -68,20 +71,28 @@ class ScanScreen extends ConsumerWidget {
             onPressed: () => _openScenarioSelector(context, ref),
           ),
         ],
+        // Slim scenario strip as part of AppBar
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: _buildScenarioStrip(context, ref, state),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: AppSpacing.screenInsets,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Active Scenario Banner
-              _buildScenarioBanner(context, ref, state),
-              const SizedBox(height: 14),
+              // ── RECORDING ZONE ──
+              const SectionHeader(
+                title: 'RECORDING',
+                subtitle: 'Capture 30s of stream audio',
+                icon: Icons.mic_rounded,
+              ),
 
               // Countdown / Progress Gauge Card
               _buildCountdownProgressCard(context, ref, state),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.cardGap),
 
               // Dynamic Waveform Visualizer
               WaveformVisualizer(
@@ -90,21 +101,23 @@ class ScanScreen extends ConsumerWidget {
                 currentSamples: state.audioSamples.length,
                 totalSamples: 480000,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.cardGap),
 
-              // Device Incline Gauge (Riparian stream-bank sighting)
-              TiltGaugeWidget(
-                tiltDegrees: state.tiltDegrees,
-                onTiltChanged: (deg) => pod.setTiltDegrees(deg),
-              ),
-              const SizedBox(height: 18),
+              // Primary Action Button (full-width, prominent)
+              _buildPrimaryAction(context, ref, state),
+              const SizedBox(height: AppSpacing.tightGap),
 
-              // Control Action Buttons
-              _buildControlButtons(context, ref, state),
-              const SizedBox(height: 14),
+              // Secondary actions row
+              _buildSecondaryActions(context, ref, state),
+              const SizedBox(height: AppSpacing.sectionGap),
+
+              // ── DEVICE CALIBRATION ──
+              // Only show expanded tilt gauge when recording; otherwise collapsed
+              _buildCollapsibleTiltGauge(state, pod),
 
               // Post-Scan Analysis Prompt Banner (if audio captured)
               if (state.audioSamples.isNotEmpty && !state.isRecording) ...[
+                const SizedBox(height: AppSpacing.cardGap),
                 _buildAnalysisReadyCard(context, state),
               ],
             ],
@@ -114,55 +127,41 @@ class ScanScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildScenarioBanner(
-      BuildContext context, WidgetRef ref, dynamic state) {
+  /// Slim inline scenario indicator under the AppBar.
+  Widget _buildScenarioStrip(
+      BuildContext context, WidgetRef ref, ScanState state) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1E36),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF00E5FF).withValues(alpha: 0.25),
+        color: const Color(0xFF0A1526),
+        border: Border(
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
         ),
       ),
       child: Row(
         children: [
           const Icon(Icons.location_on_rounded,
-              color: Color(0xFF00E5FF), size: 16),
-          const SizedBox(width: 8),
+              color: Color(0xFF00E5FF), size: 14),
+          const SizedBox(width: 6),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  state.selectedScenario.locationSector,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Environment: ${state.selectedScenario.title}',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 10.5,
-                  ),
-                ),
-              ],
+            child: Text(
+              '${state.selectedScenario.locationSector} • ${state.selectedScenario.title}',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          TextButton(
-            style: TextButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-            ),
-            onPressed: () => _openScenarioSelector(context, ref),
+          GestureDetector(
+            onTap: () => _openScenarioSelector(context, ref),
             child: const Text(
               'Switch',
               style: TextStyle(
                 color: Color(0xFF00E5FF),
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -173,12 +172,12 @@ class ScanScreen extends ConsumerWidget {
   }
 
   Widget _buildCountdownProgressCard(
-      BuildContext context, WidgetRef ref, dynamic state) {
+      BuildContext context, WidgetRef ref, ScanState state) {
     final progress = state.scanProgress;
     final percent = (progress * 100).toInt();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.innerCardPadding),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1E36),
         borderRadius: BorderRadius.circular(18),
@@ -229,37 +228,40 @@ class ScanScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      state.isRecording
-                          ? 'Acoustic Scan Active'
-                          : (state.audioSamples.isNotEmpty
-                              ? 'Scan Buffer Complete'
-                              : 'Ready for Protocol'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Text(
+                        state.isRecording
+                            ? 'Acoustic Scan Active'
+                            : (state.audioSamples.isNotEmpty
+                                ? 'Scan Buffer Complete'
+                                : 'Ready for Protocol'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Text(
                       '$percent%',
                       style: const TextStyle(
                         color: Color(0xFF00E5FF),
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   state.isRecording
-                      ? 'Holding device at ${state.tiltDegrees.toStringAsFixed(0)}° towards riparian water zone...'
-                      : 'Captures standardized 30.0s 16 kHz Linear PCM buffer (480k samples).',
+                      ? 'Holding at ${state.tiltDegrees.toStringAsFixed(0)}° towards riparian zone...'
+                      : '30.0s 16 kHz Linear PCM buffer (480k samples).',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 11,
-                    height: 1.3,
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 12,
+                    height: 1.35,
                   ),
                 ),
               ],
@@ -270,93 +272,79 @@ class ScanScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildControlButtons(
-      BuildContext context, WidgetRef ref, dynamic state) {
+  /// Primary CTA — full width, prominent.
+  Widget _buildPrimaryAction(
+      BuildContext context, WidgetRef ref, ScanState state) {
     final pod = ref.read(scanPodProvider.notifier);
 
-    return Column(
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: state.isRecording
+              ? const Color(0xFFFF5252)
+              : const Color(0xFF00E5FF),
+          foregroundColor:
+              state.isRecording ? Colors.white : const Color(0xFF050B14),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+        ),
+        onPressed: state.isAnalyzing
+            ? null
+            : () {
+                if (state.isRecording) {
+                  pod.stopScan();
+                } else {
+                  pod.startScan(durationSeconds: 30);
+                }
+              },
+        icon: Icon(
+          state.isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+          size: 22,
+        ),
+        label: Text(
+          state.isRecording ? 'Stop Recording' : 'Start 30s Field Scan',
+        ),
+      ),
+    );
+  }
+
+  /// Secondary actions — Quick Demo + Reset in a subtle row below.
+  Widget _buildSecondaryActions(
+      BuildContext context, WidgetRef ref, ScanState state) {
+    final pod = ref.read(scanPodProvider.notifier);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: state.isRecording
-                      ? const Color(0xFFFF5252)
-                      : const Color(0xFF00E5FF),
-                  foregroundColor: state.isRecording
-                      ? Colors.white
-                      : const Color(0xFF050B14),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                onPressed: state.isAnalyzing
-                    ? null
-                    : () {
-                        if (state.isRecording) {
-                          pod.stopScan();
-                        } else {
-                          pod.startScan(durationSeconds: 30);
-                        }
-                      },
-                icon: Icon(
-                  state.isRecording
-                      ? Icons.stop_rounded
-                      : Icons.mic_rounded,
-                  size: 20,
-                ),
-                label: Text(
-                  state.isRecording ? 'Stop Early' : 'Start 30s Field Scan',
-                ),
-              ),
+        TextButton.icon(
+          onPressed:
+              state.isRecording ? null : () => pod.quickSimulateFullScan(),
+          icon: const Icon(Icons.bolt_rounded, color: Color(0xFFFFD54F), size: 16),
+          label: Text(
+            'Quick Demo',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 2,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.25),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                onPressed: state.isRecording
-                    ? null
-                    : () => pod.quickSimulateFullScan(),
-                icon: const Icon(
-                  Icons.bolt_rounded,
-                  color: Color(0xFFFFD54F),
-                  size: 18,
-                ),
-                label: const Text(
-                  'Quick Demo',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
         if (state.audioSamples.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Center(
-            child: TextButton.icon(
-              onPressed: () => pod.resetScan(),
-              icon: const Icon(Icons.refresh_rounded, size: 14, color: Colors.white54),
-              label: const Text(
-                'Reset Audio Buffer',
-                style: TextStyle(color: Colors.white54, fontSize: 11),
-              ),
+          const SizedBox(width: 16),
+          TextButton.icon(
+            onPressed: () => pod.resetScan(),
+            icon: const Icon(Icons.refresh_rounded,
+                size: 14, color: Colors.white54),
+            label: const Text(
+              'Reset Buffer',
+              style: TextStyle(color: Colors.white54, fontSize: 12),
             ),
           ),
         ],
@@ -364,9 +352,89 @@ class ScanScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAnalysisReadyCard(BuildContext context, dynamic state) {
+  /// Tilt gauge — collapsible. Auto-shows when recording.
+  Widget _buildCollapsibleTiltGauge(ScanState state, dynamic pod) {
+    return AnimatedCrossFade(
+      duration: const Duration(milliseconds: 300),
+      crossFadeState: state.isRecording
+          ? CrossFadeState.showFirst
+          : CrossFadeState.showSecond,
+      firstChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            title: 'DEVICE CALIBRATION',
+            subtitle: 'Stream bank angle',
+            icon: Icons.screen_rotation_rounded,
+          ),
+          TiltGaugeWidget(
+            tiltDegrees: state.tiltDegrees,
+            onTiltChanged: (deg) => pod.setTiltDegrees(deg),
+          ),
+        ],
+      ),
+      // When not recording, show a compact expand-hint
+      secondChild: Container(
+        margin: const EdgeInsets.only(top: 4),
+        child: Theme(
+          data: ThemeData(
+            dividerColor: Colors.transparent,
+            splashColor: Colors.transparent,
+            brightness: Brightness.dark,
+          ),
+          child: ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: Row(
+              children: [
+                Icon(Icons.screen_rotation_rounded,
+                    color: Colors.white.withValues(alpha: 0.45), size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  'Device Calibration',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: state.isOptimalTilt
+                        ? const Color(0xFF00E676).withValues(alpha: 0.15)
+                        : const Color(0xFFFFB300).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${state.tiltDegrees.toStringAsFixed(0)}°',
+                    style: TextStyle(
+                      color: state.isOptimalTilt
+                          ? const Color(0xFF00E676)
+                          : const Color(0xFFFFB300),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            children: [
+              TiltGaugeWidget(
+                tiltDegrees: state.tiltDegrees,
+                onTiltChanged: (deg) => pod.setTiltDegrees(deg),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalysisReadyCard(BuildContext context, ScanState state) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.innerCardPadding),
       decoration: BoxDecoration(
         color: const Color(0xFF00E676).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
@@ -374,51 +442,63 @@ class ScanScreen extends ConsumerWidget {
           color: const Color(0xFF00E676).withValues(alpha: 0.5),
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Color(0xFF00E676),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.check_rounded, color: Colors.black, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Acoustic Buffer Evaluated',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF00E676),
+                  shape: BoxShape.circle,
                 ),
-                Text(
-                  'Peak: ${state.spectralResult.peakFrequencyHz.toStringAsFixed(1)} Hz • Ready for HITL review',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00E676),
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                child: const Icon(Icons.check_rounded,
+                    color: Colors.black, size: 18),
               ),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Acoustic Buffer Ready',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Peak: ${state.spectralResult.peakFrequencyHz.toStringAsFixed(1)} Hz • Ready for AI review',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00E676),
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              onPressed: onProceedToAnalysis,
+              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+              label: const Text('View AI Review'),
             ),
-            onPressed: onProceedToAnalysis,
-            child: const Text('View AI Review'),
           ),
         ],
       ),

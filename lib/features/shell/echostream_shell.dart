@@ -51,24 +51,24 @@ class _EchoStreamShellState extends ConsumerState<EchoStreamShell> {
             NavigationDestination(
               icon: Icon(Icons.mic_none_rounded, color: Colors.white70),
               selectedIcon: Icon(Icons.mic_rounded, color: Color(0xFF00E5FF)),
-              label: 'Field Scan',
+              label: 'Scan',
             ),
             NavigationDestination(
               icon: Icon(Icons.auto_graph_rounded, color: Colors.white70),
               selectedIcon:
                   Icon(Icons.auto_graph_rounded, color: Color(0xFF00E5FF)),
-              label: 'Explainable AI',
+              label: 'AI Review',
             ),
             NavigationDestination(
               icon: Icon(Icons.hub_outlined, color: Colors.white70),
               selectedIcon: Icon(Icons.hub_rounded, color: Color(0xFF00E5FF)),
-              label: 'One Health',
+              label: 'Report',
             ),
             NavigationDestination(
               icon: Icon(Icons.history_rounded, color: Colors.white70),
               selectedIcon:
                   Icon(Icons.history_rounded, color: Color(0xFF00E5FF)),
-              label: 'Audit Log',
+              label: 'History',
             ),
           ],
         ),

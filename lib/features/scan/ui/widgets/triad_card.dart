@@ -151,54 +151,55 @@ class TriadCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Title row with number badge
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 10,
-                  backgroundColor: Colors.white.withValues(alpha: 0.1),
-                  child: Text(
-                    number,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: scoreColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: scoreColor, width: 0.8),
-              ),
+            CircleAvatar(
+              radius: 11,
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
               child: Text(
-                scoreText,
-                style: TextStyle(
-                  color: scoreColor,
+                number,
+                style: const TextStyle(
+                  color: Colors.white,
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
+        const SizedBox(height: 8),
+        // Score badge on its own line
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: scoreColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: scoreColor, width: 0.8),
+          ),
+          child: Text(
+            scoreText,
+            style: TextStyle(
+              color: scoreColor,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
         if (progressValue != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
@@ -216,8 +217,8 @@ class TriadCard extends StatelessWidget {
             color: isActionRecommendation
                 ? const Color(0xFFFFD54F)
                 : Colors.white.withValues(alpha: 0.70),
-            fontSize: 11.5,
-            height: 1.35,
+            fontSize: 12,
+            height: 1.4,
           ),
         ),
       ],
