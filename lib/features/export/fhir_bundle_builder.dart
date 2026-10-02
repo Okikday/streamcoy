@@ -47,7 +47,7 @@ class FhirBundleBuilder {
             'display': 'Mosquito-borne disease risk assessment (procedure)',
           },
         ],
-        'text': 'EchoStream One Health Assessment',
+        'text': 'Streamcoy One Health Assessment',
       },
       'subject': {
         'display': assessment.locationSector,

@@ -7,6 +7,7 @@ import '../widgets/tilt_gauge_widget.dart';
 import '../widgets/scenario_selector_sheet.dart';
 import '../../../../core/ui/spacing.dart';
 import '../../../../core/ui/section_header.dart';
+import '../../../../core/ui/responsive_body.dart';
 
 class ScanScreen extends ConsumerWidget {
   final VoidCallback onProceedToAnalysis;
@@ -45,7 +46,7 @@ class ScanScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'EchoStream Sentinel',
+                  'Streamcoy',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -77,10 +78,11 @@ class ScanScreen extends ConsumerWidget {
           child: _buildScenarioStrip(context, ref, state),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.screenInsets,
-          child: Column(
+      body: ResponsiveBody(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: AppSpacing.screenInsets,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── RECORDING ZONE ──
@@ -123,6 +125,7 @@ class ScanScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

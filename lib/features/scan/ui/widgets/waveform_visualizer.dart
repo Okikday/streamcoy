@@ -38,32 +38,39 @@ class WaveformVisualizer extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isRecording
-                          ? const Color(0xFFFF5252)
-                          : const Color(0xFF00E5FF),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isRecording
+                            ? const Color(0xFFFF5252)
+                            : const Color(0xFF00E5FF),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    isRecording
-                        ? '16 kHz Raw Linear PCM Stream'
-                        : 'Acoustic Sensor Standby',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        isRecording
+                            ? '16 kHz Raw Linear PCM Stream'
+                            : 'Acoustic Sensor Standby',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '${(currentSamples / 1000).toStringAsFixed(0)}k / ${(totalSamples / 1000).toStringAsFixed(0)}k samples',
                 style: const TextStyle(

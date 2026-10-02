@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/sign_in_pod.dart';
-import '../../../shell/echostream_shell.dart';
+import '../../../shell/streamcoy_shell.dart';
 
 class SignInView extends ConsumerStatefulWidget {
   const SignInView({super.key});
@@ -26,7 +26,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
             Icon(Icons.sensors_rounded, color: Color(0xFF00E5FF), size: 22),
             SizedBox(width: 8),
             Text(
-              'EchoStream Sentinel',
+              'Streamcoy',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -164,7 +164,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                                   if (ok) {
                                     navigator.pushReplacement(
                                       MaterialPageRoute(
-                                        builder: (_) => const EchoStreamShell(),
+                                        builder: (_) => const StreamcoyShell(),
                                       ),
                                     );
                                   }
@@ -200,7 +200,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                     onPressed: () {
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                          builder: (_) => const EchoStreamShell(),
+                          builder: (_) => const StreamcoyShell(),
                         ),
                       );
                     },

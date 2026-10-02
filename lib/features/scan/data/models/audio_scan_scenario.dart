@@ -1,4 +1,4 @@
-/// Predefined scenarios for demonstration and testing of EchoStream.
+/// Predefined scenarios for demonstration and testing of Streamcoy.
 enum ScenarioType {
   stagnantCorridor,
   pristineBrook,

@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'features/shell/echostream_shell.dart';
+import 'features/shell/streamcoy_shell.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: EchoStreamApp()));
+  runApp(const ProviderScope(child: StreamcoyApp()));
 }
 
-class EchoStreamApp extends StatelessWidget {
-  const EchoStreamApp({super.key});
+/// Legacy alias for StreamcoyApp
+typedef EchoStreamApp = StreamcoyApp;
+
+class StreamcoyApp extends StatelessWidget {
+  const StreamcoyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EchoStream Sentinel',
+      title: 'Streamcoy',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       darkTheme: ThemeData(
@@ -123,7 +126,7 @@ class EchoStreamApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const EchoStreamShell(),
+      home: const StreamcoyShell(),
     );
   }
 }

@@ -11,7 +11,7 @@ Map<String, dynamic> generateObservation({
 }) {
   final now = DateTime.now();
   final dummy = OneHealthAssessment(
-    id: 'echostream-obs-${now.millisecondsSinceEpoch}',
+    id: 'streamcoy-obs-${now.millisecondsSinceEpoch}',
     timestamp: now,
     locationSector: 'Urban Stream Sector Alpha - Coimbra Corridor',
     latitude: 40.2056,

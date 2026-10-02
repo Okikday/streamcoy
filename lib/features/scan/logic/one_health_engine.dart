@@ -18,7 +18,7 @@ class OneHealthEngine {
     double relativeHumidityPercent = 78.0,
   }) {
     final now = DateTime.now();
-    final assessmentId = 'echostream-obs-${now.year}'
+    final assessmentId = 'streamcoy-obs-${now.year}'
         '${now.month.toString().padLeft(2, '0')}'
         '${now.day.toString().padLeft(2, '0')}-'
         '${now.millisecondsSinceEpoch.toString().substring(7)}';

@@ -6,6 +6,7 @@ import '../widgets/triad_card.dart';
 import '../widgets/fhir_json_viewer.dart';
 import '../../../../core/ui/spacing.dart';
 import '../../../../core/ui/section_header.dart';
+import '../../../../core/ui/responsive_body.dart';
 
 class OneHealthScreen extends ConsumerWidget {
   final VoidCallback onStartNewScan;
@@ -31,8 +32,9 @@ class OneHealthScreen extends ConsumerWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-        body: Center(
-          child: Padding(
+        body: ResponsiveBody(
+          child: Center(
+            child: Padding(
             padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -74,6 +76,7 @@ class OneHealthScreen extends ConsumerWidget {
                   label: const Text('Start a Scan'),
                 ),
               ],
+              ),
             ),
           ),
         ),
@@ -114,10 +117,11 @@ class OneHealthScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.screenInsets,
-          child: Column(
+      body: ResponsiveBody(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: AppSpacing.screenInsets,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Environmental Context
@@ -230,6 +234,7 @@ class OneHealthScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -1,0 +1,121 @@
+name: Build Release APK (Split per ABI)
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      build_name:
+        description: 'Version Name (e.g., 1.0.0)'
+        required: false
+        default: '1.0.0'
+        type: string
+      build_number:
+        description: 'Version Code / Build Number (e.g., 1)'
+        required: false
+        default: ''
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-apk:
+    name: Build Split-per-ABI APKs
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+
+      - name: Verify Flutter Environment
+        run: |
+          flutter doctor -v
+          java -version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run Static Analysis
+        run: flutter analyze
+
+      - name: Run Unit & Widget Tests
+        run: flutter test
+
+      - name: Build Split-per-ABI Release APKs
+        run: |
+          BUILD_ARGS="--release --split-per-abi"
+          
+          # Pass custom build name/number if specified via manual dispatch
+          if [ -n "${{ inputs.build_name }}" ]; then
+            BUILD_ARGS="$BUILD_ARGS --build-name=${{ inputs.build_name }}"
+          fi
+          
+          if [ -n "${{ inputs.build_number }}" ]; then
+            BUILD_ARGS="$BUILD_ARGS --build-number=${{ inputs.build_number }}"
+          else
+            BUILD_ARGS="$BUILD_ARGS --build-number=${{ github.run_number }}"
+          fi
+          
+          echo "Executing: flutter build apk $BUILD_ARGS"
+          flutter build apk $BUILD_ARGS
+
+      - name: Inspect APK Outputs & Generate SHA-256 Checksums
+        run: |
+          cd build/app/outputs/flutter-apk
+          echo "=== Generated Split APKs ==="
+          ls -lh app-*-release.apk
+          
+          echo "=== Generating SHA-256 Checksums ==="
+          sha256sum app-*-release.apk > sha256sums.txt
+          cat sha256sums.txt
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamcoy-release-apks-${{ github.run_number }}
+          path: |
+            build/app/outputs/flutter-apk/app-*-release.apk
+            build/app/outputs/flutter-apk/sha256sums.txt
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Create GitHub Release on Tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Streamcoy ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            build/app/outputs/flutter-apk/app-*-release.apk
+            build/app/outputs/flutter-apk/sha256sums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

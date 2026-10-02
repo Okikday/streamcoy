@@ -324,7 +324,7 @@ class ScanPod extends Notifier<ScanState> {
   List<OneHealthAssessment> _createInitialHistoricalAssessments() {
     return [
       OneHealthAssessment(
-        id: 'echostream-obs-20260925-104921',
+        id: 'streamcoy-obs-20260925-104921',
         timestamp: DateTime.now().subtract(const Duration(hours: 18)),
         locationSector: 'Sector Charlie - Lower Mondego Retention Pond',
         latitude: 40.2112,
@@ -351,7 +351,7 @@ class ScanPod extends Notifier<ScanState> {
         isMarkedFalsePositive: false,
       ),
       OneHealthAssessment(
-        id: 'echostream-obs-20260924-142210',
+        id: 'streamcoy-obs-20260924-142210',
         timestamp: DateTime.now().subtract(const Duration(days: 2)),
         locationSector: 'Sector Bravo - Botanical Garden Creek',
         latitude: 40.2078,

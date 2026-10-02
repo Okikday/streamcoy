@@ -7,3 +7,4 @@ export 'ui/ui_utils.dart';
 export 'ui/spacing.dart';
 export 'ui/sentinel_card.dart';
 export 'ui/section_header.dart';
+export 'ui/responsive_body.dart';

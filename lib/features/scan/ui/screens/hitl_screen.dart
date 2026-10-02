@@ -7,6 +7,7 @@ import '../widgets/spectrogram_widget.dart';
 import '../widgets/hitl_triage_widget.dart';
 import '../../../../core/ui/spacing.dart';
 import '../../../../core/ui/section_header.dart';
+import '../../../../core/ui/responsive_body.dart';
 
 class HitlScreen extends ConsumerWidget {
   final VoidCallback onProceedToOneHealth;
@@ -52,10 +53,11 @@ class HitlScreen extends ConsumerWidget {
           ],
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.screenInsets,
-          child: Column(
+      body: ResponsiveBody(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: AppSpacing.screenInsets,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── AI ANALYSIS RESULTS ──
@@ -136,6 +138,7 @@ class HitlScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -244,12 +247,13 @@ class _CollapsibleDualEngineBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F1E36),
+    return Material(
+      color: const Color(0xFF0F1E36),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           // Always-visible summary: key metrics

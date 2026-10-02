@@ -4,6 +4,7 @@ import '../../providers/scan_pod.dart';
 import '../../data/models/one_health_assessment.dart';
 import '../widgets/fhir_json_viewer.dart';
 import '../../../../core/ui/spacing.dart';
+import '../../../../core/ui/responsive_body.dart';
 
 class FieldHistoryScreen extends ConsumerWidget {
   const FieldHistoryScreen({super.key});
@@ -40,39 +41,43 @@ class FieldHistoryScreen extends ConsumerWidget {
         ),
       ),
       body: history.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.history_rounded,
-                      size: 56, color: Colors.white.withValues(alpha: 0.2)),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No Stored Observations',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+          ? ResponsiveBody(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.history_rounded,
+                        size: 56, color: Colors.white.withValues(alpha: 0.2)),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No Stored Observations',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Completed scans will appear here.',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 13,
+                    const SizedBox(height: 6),
+                    Text(
+                      'Completed scans will appear here.',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             )
-          : ListView.builder(
-              padding: AppSpacing.screenInsets,
-              itemCount: history.length,
-              itemBuilder: (context, index) {
-                final item = history[index];
-                return _HistoryItemCard(item: item);
-              },
+          : ResponsiveBody(
+              child: ListView.builder(
+                padding: AppSpacing.screenInsets,
+                itemCount: history.length,
+                itemBuilder: (context, index) {
+                  final item = history[index];
+                  return _HistoryItemCard(item: item);
+                },
+              ),
             ),
     );
   }
@@ -93,20 +98,22 @@ class _HistoryItemCard extends StatelessWidget {
             ? const Color(0xFFFFB300)
             : const Color(0xFF00E676));
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Material(
         color: const Color(0xFF0F1E36),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isCritical
-              ? const Color(0xFFFF5252).withValues(alpha: 0.4)
-              : Colors.white.withValues(alpha: 0.08),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: isCritical
+                ? const Color(0xFFFF5252).withValues(alpha: 0.4)
+                : Colors.white.withValues(alpha: 0.08),
+          ),
         ),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
+        clipBehavior: Clip.antiAlias,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           childrenPadding:
               const EdgeInsets.fromLTRB(14, 0, 14, 14),
@@ -211,7 +218,8 @@ class _HistoryItemCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildMetricPill(String label, String value) {
